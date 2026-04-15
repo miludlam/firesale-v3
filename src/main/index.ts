@@ -2,6 +2,16 @@ import { app, BrowserWindow, dialog, ipcMain } from 'electron';
 import { readFile, writeFile } from 'fs/promises';
 import { join } from 'path';
 
+type MarkdownFile = {
+    content?: string;
+    filePath?: string;
+}
+
+let currentFile: MarkdownFile = {
+    content: '',
+    filePath: undefined,
+};
+
 const createWindow = () => {
     const mainWindow = new BrowserWindow({
         width: 800,
@@ -41,6 +51,7 @@ app.on('activate', () => {
     }
 });
 
+// Open File
 const showOpenDialog = async (browserWindow: BrowserWindow) => {
     const result = await dialog.showOpenDialog(browserWindow, {
         properties: ['openFile'],
@@ -60,6 +71,13 @@ const openFile = async (browserWindow: BrowserWindow, filePath: string) => {
     browserWindow.webContents.send('file-opened', content, filePath);
 };
 
+ipcMain.on('show-open-dialog', (event) => {
+    const browserWindow = BrowserWindow.fromWebContents(event.sender);
+    if (!browserWindow) return;
+    showOpenDialog(browserWindow);
+});
+
+// Export HTML
 const showExportHtmlDialog = async (browserWindow: BrowserWindow, html: string) => {
     const result = await dialog.showSaveDialog(browserWindow, {
         title: 'Export HTML',
@@ -78,14 +96,37 @@ const exportHtml = async (filePath: string, html: string) => {
     await writeFile(filePath, html, { encoding: 'utf8' });
 }
 
-ipcMain.on('show-open-dialog', (event) => {
-    const browserWindow = BrowserWindow.fromWebContents(event.sender);
-    if (!browserWindow) return;
-    showOpenDialog(browserWindow);
-});
-
 ipcMain.on('show-export-html-dialog', (event, html: string) => {
     const browserWindow = BrowserWindow.fromWebContents(event.sender);
     if (!browserWindow) return;
     showExportHtmlDialog(browserWindow, html);
-})
+});
+
+// Save File
+const showSaveDialog = async (browserWindow: BrowserWindow) => {
+    const result = await dialog.showSaveDialog(browserWindow, {
+        title: 'Save Markdown',
+        filters: [{name: 'Markdown File', extensions: ['md']}],
+    });
+
+    if (result.canceled) return;
+
+    const { filePath } = result;
+    if (!filePath) return;
+
+    return filePath;
+};
+
+const saveFile = async (browserWindow: BrowserWindow, content: string) => {
+    const filePath = currentFile.filePath ?? await showSaveDialog(browserWindow);
+    if (!filePath) return;
+
+    await writeFile(filePath, content, { encoding: 'utf8' });
+};
+
+ipcMain.on('save-file', async (event, content: string) => {
+    const browserWindow = BrowserWindow.fromWebContents(event.sender);
+    if (!browserWindow) return;
+
+    await saveFile(browserWindow, content);
+});

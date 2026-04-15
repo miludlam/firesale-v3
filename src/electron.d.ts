@@ -9,5 +9,6 @@ declare interface Window {
         onFileOpen: (callback: (content: string, filePath: string) => void) => void;
         showOpenDialog: () => void;
         showExportHtmlDialog: (html: string) => void;
+        saveFile: (content: string) => void;
     };
 }
