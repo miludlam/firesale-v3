@@ -1,7 +1,7 @@
 import { ipcRenderer, contextBridge } from 'electron';
 
 contextBridge.exposeInMainWorld('api', {
-    onFileOpen: (callback: (content: string, filePath: string) => void) => {
+    onFileOpen: (callback: (content: string) => void) => {
         ipcRenderer.on('file-opened', (_, content: string) => {
             callback(content);
         });
@@ -14,5 +14,8 @@ contextBridge.exposeInMainWorld('api', {
     },
     saveFile: async (content: string) => {
         ipcRenderer.send('save-file', content);
+    },
+    checkForUnsavedChanges: async (content: string) => {
+        return await ipcRenderer.invoke('has-changes', content);
     }
 });

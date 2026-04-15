@@ -24,11 +24,16 @@ const setCurrentFile = (browserWindow: BrowserWindow, content: string, filePath:
     browserWindow.setRepresentedFilename(filePath);
 };
 
+const hasChanges = (content: string) => {
+    return currentFile.content !== content;
+}
+
 let currentFile: MarkdownFile = {
     content: '',
     filePath: undefined,
 };
 
+// Build app window
 const createWindow = () => {
     const mainWindow = new BrowserWindow({
         width: 800,
@@ -149,4 +154,8 @@ ipcMain.on('save-file', async (event, content: string) => {
     if (!browserWindow) return;
 
     await saveFile(browserWindow, content);
+});
+
+ipcMain.handle('has-changes', async (_, content: string) => {
+    return hasChanges(content);
 });
