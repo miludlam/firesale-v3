@@ -1,4 +1,4 @@
-import { app, BrowserWindow, dialog, ipcMain } from 'electron';
+import { app, BrowserWindow, dialog, ipcMain, shell } from 'electron';
 import { readFile, writeFile } from 'fs/promises';
 import { join, basename } from 'path';
 
@@ -165,4 +165,16 @@ ipcMain.handle('has-changes', async (event, content: string) => {
     browserWindow?.setDocumentEdited(changed)
 
     return changed;
+});
+
+ipcMain.on('show-in-folder', async () => {
+    if (currentFile.filePath) {
+        shell.showItemInFolder(currentFile.filePath);
+    }
+});
+
+ipcMain.on('open-in-default', async () => {
+    if (currentFile.filePath) {
+        await shell.openPath(currentFile.filePath);
+    }
 });

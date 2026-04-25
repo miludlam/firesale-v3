@@ -11,5 +11,7 @@ declare interface Window {
         showExportHtmlDialog: (html: string) => void;
         saveFile: (content: string) => void;
         checkForUnsavedChanges: (content: string) => Promise<Boolean>;
+        showInFolder: () => void;
+        openInDefault: () => void;
     };
 }
